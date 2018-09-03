@@ -21,6 +21,8 @@ description:         Please see the README on GitHub at <https://github.com/rolf
 
 dependencies:
 - base >= 4.7 && < 5
+- split
+- hspec
 
 library:
   source-dirs: src
@@ -35,7 +37,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - hmt
-    - split
 
 tests:
   hmt-test:
