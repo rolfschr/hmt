@@ -1,8 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module LibHmt where
+
 
 import Data.Char
 import Data.List
 import Data.List.Split
+import qualified Data.Text as T
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
@@ -28,23 +32,28 @@ toSymbols = chop consumeSymbol
 symbolToString :: Symbol -> String
 symbolToString (Symbol x) = x
 
--- Split a list of symbols into Groups
+-- Split a list of symbols into Groups.
 toGroups :: [Symbol] -> [Group]
-toGroups ss = split (oneOf [Symbol " "]) ss
+toGroups ss = split (dropInnerBlanks . dropFinalBlank $ oneOf [Symbol " ", Symbol "\n"]) ss
 
 -- Convert a Group back to a String.
 groupToString :: Group -> String
 groupToString g = concatMap symbolToString g
 
--- Consume the first Line within a list of Groups.
-consumeLine :: Int -> [Group] -> ([Group], [Group])
+-- Consume the first couple of Groups to form a Line and return it as well as
+-- the remaining Groups.
+consumeLine :: Int -> [Group] -> (Line, [Group])
+--consumeLine w [g] = ([g], [])
+--consumeLine w gs = if i == 0 then ([head gs], tail gs) else splitAt i gs
 consumeLine w gs = splitAt i gs
     where
-        -- Make a list containing the cumulative length when adding each Group
-        -- one by one. Use `tail` to remove the [0] at the head.
-        cumSum = scanl (\acc ss -> acc + length ss) 0 gs
-        -- Get the index of the highest [Group] that still fits a Line.
-        i = length (takeWhile (<= w) cumSum)
+        -- Make a list containing the cumulative length of the to-be-consumed
+        -- Line (i.e. when adding each Group one by one). Use `tail` to remove
+        -- the [0] at the head.
+        cumSum = scanl1 (\acc l -> acc + l) (map length gs)
+        -- Get the index of the longest list of Groups that still fits a Line.
+        -- Take at least one group.
+        i = max 1 (length (takeWhile (<= w) cumSum))
 
 -- Split a list of Groups into Lines.
 toLines :: Int -> [Group] -> [Line]
@@ -52,7 +61,7 @@ toLines w = chop (consumeLine w)
 
 -- Convert a Line back to a String removing the leading whitespace(s).
 lineToString :: Line -> String
-lineToString l = dropWhile isSpace $ concatMap (groupToString) l
+lineToString l = T.unpack $ T.strip $ T.pack $ concatMap (groupToString) l
 
 hmtWith :: Int -> String -> String
 hmtWith w s = intercalate "\n" (map lineToString lines)

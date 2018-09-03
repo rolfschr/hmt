@@ -1,6 +1,12 @@
 module Main where
 
+import Options.Applicative
+
 import LibHmt
+import Options
 
 main :: IO ()
-main = interact hmt
+main = do
+    options <- execParser opts
+    let w = width options
+    interact (hmtWith w)
