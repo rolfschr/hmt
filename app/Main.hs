@@ -13,8 +13,8 @@ main = do
     options <- execParser opts
     let ex = exec options
     let ar = args options
-    --interact (hmtWith w)
-    --x <- fmt "adfaf" -- <$> getContents
-    (a, b, c) <- getContents >>= hmtWith ex ar
-    -- print (show (typeOf x))
-    putStr b
+    (exitcode, stdout, stderr) <- getContents >>= hmtWith ex ar
+    if (exitcode == ExitSuccess)
+        then putStr stdout
+        else putStr $ (show exitcode) ++ ": " ++ stderr
+    exitWith exitcode
