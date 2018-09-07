@@ -3,23 +3,27 @@ module Options where
 import Options.Applicative
 
 data Options = Options
-    { width :: Int}
+    { exec :: String,
+      args :: [String]}
 
 opts :: ParserInfo Options
 opts = info (opts' <**> helper)
     ( fullDesc
     <> progDesc "Format text."
-    <> header "hmt - A Simple Text Formatter")
+    <> header "hmt - A Simple Wrapper Around fmt")
 
 opts' :: Parser Options
-opts' = Options <$> width'
+opts' = Options <$> exec' <*> args'
 
-
-width' :: Parser Int
-width' = option auto
-    ( long "width"
-   <> short 'w'
-   <> metavar "N"
-   <> value 79
+exec' :: Parser String
+exec' = strOption
+    ( long "exec"
+   <> short 'e'
+   <> metavar "EXECUTABLE"
+   <> value "fmt"
    <> showDefault
-   <> help "Maximum line width" )
+   <> help "The name or path to fmt" )
+
+args' :: Parser [String]
+args' = many (argument str
+    ( metavar "ARGUMENTS ..."))

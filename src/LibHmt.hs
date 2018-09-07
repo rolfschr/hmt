@@ -75,6 +75,7 @@ symbolsToString :: [Symbol] -> String
 symbolsToString = concatMap symbolToString
 
 -- Extract EscSeqs from input, run `fmt` on remainder and insert EscSeqs again.
+hmtWith :: FilePath -> [String] -> String -> IO (ExitCode, String, String)
 hmtWith exec args stdin = do
     let (eiss, ss) = extractEscSeqs $ toSymbols stdin
     (exitcode, stdout, stderr) <- fmtWith exec args (symbolsToString ss)
