@@ -12,8 +12,8 @@ import System.Exit
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
--- TODO: cornercase: not close esc seq???
-
+-- A "Symbol" represent either a single Character, a whitespace or an escape
+-- sequence.
 data Symbol = Character Char | Whitespace Char | EscSeq String deriving (Show, Eq)
 
 -- Consume the first Symbol within the String.
@@ -74,7 +74,7 @@ symbolToString (EscSeq x) = x
 symbolsToString :: [Symbol] -> String
 symbolsToString = concatMap symbolToString
 
----- SplhmtWith :: FilePath -> [String] -> String -> IO (ExitCode, String, String)
+-- Extract EscSeqs from input, run `fmt` on remainder and insert EscSeqs again.
 hmtWith exec args stdin = do
     let (eiss, ss) = extractEscSeqs $ toSymbols stdin
     (exitcode, stdout, stderr) <- fmtWith exec args (symbolsToString ss)
@@ -90,6 +90,3 @@ hmt stdin = hmtWith "fmt" [] stdin
 
 fmtWith :: FilePath -> [String] -> String -> IO (ExitCode, String, String)
 fmtWith exec args stdin = readProcessWithExitCode exec args stdin
-
---fmt :: String -> IO (ExitCode, String, String)
---fmt stdin = fmtWith "fmt" [] stdin
