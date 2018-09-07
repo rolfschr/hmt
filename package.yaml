@@ -24,6 +24,7 @@ dependencies:
 - split
 - optparse-applicative
 - text
+- process
 - hspec
 
 library:
