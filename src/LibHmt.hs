@@ -86,8 +86,5 @@ hmtWith exec args stdin = do
                   else stdout
     return (exitcode, stdout', stderr)
 
-hmt :: String -> IO (ExitCode, String, String)
-hmt stdin = hmtWith "fmt" [] stdin
-
 fmtWith :: FilePath -> [String] -> String -> IO (ExitCode, String, String)
 fmtWith exec args stdin = readProcessWithExitCode exec args stdin
