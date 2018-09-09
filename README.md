@@ -21,13 +21,13 @@ Get [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) and run
 $ make release
 ```
 
-Alternatively, download a binary from the release page.
+Alternatively, download a binary from the [release page](https://github.com/rolfschr/hmt/releases).
 
 # Implemenation
 
 ``hmt`` is written in Haskell (because of reasons).
-All escape sequences are removed from the input text and the remainder is feeded into ``fmt``.
-The previously removed escape sequences are then inserted again into ``fmt``'s output.
+All escape sequences are removed from the input text and the remainder is fed into ``fmt``.
+The removed escape sequences are then inserted again into ``fmt``'s output.
 
 Currently, ``hmt`` is really only a simple wrapper.
 Running ``hmt --help`` will actually yield ``fmt``'s help message!
@@ -39,3 +39,4 @@ The formated text will contain a different number of whitespaces (newlines, spac
 ![Bug](./bug.png)
 
 Note how both ``fmt`` as well as ``hmt`` are wrong but in different ways.
+``fmt`` gets the total number of lines wrong while ``hmt`` looses the first underlined whitespace.
