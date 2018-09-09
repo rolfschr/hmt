@@ -7,7 +7,7 @@
 ``hmt`` can be used exactly like ``fmt``.
 However, input text is only read from STDIN.
 
-```bash
+```
 $ cat myfile | hmt <any option for fmt except FILE>
 ```
 
