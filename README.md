@@ -4,14 +4,18 @@
 
 ![Screenshot](./screenshot.png)
 
+# Usage
+
 ``hmt`` can be used exactly like ``fmt``.
-However, input text is only read from STDIN.
 
-```
-$ cat myfile | hmt <any option for fmt except FILE>
-```
+A word of caution:
+``fmt`` expects any non-option command line to be a file and tries to open it.
+The same holds for ``hmt``.
+However, ``hmt`` simply forwards any non-file command line option/argument to ``fmt`` without checking whether this was actually and option/argument or not.
 
-``hmt`` execpts ``fmt`` to be in your ``PATH``.
+# Prerequisites
+
+``hmt`` expects ``fmt`` to be in your ``PATH``.
 
 # Install / Download
 
