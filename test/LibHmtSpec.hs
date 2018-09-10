@@ -4,12 +4,6 @@ import Test.Hspec
 
 import LibHmt
 
-toIndexedSymbolsFromString :: String -> [(Int, Symbol)]
-toIndexedSymbolsFromString s = (indexSymbols . toSymbols) s
-
-extractInsert :: [Symbol] -> [Symbol]
-extractInsert = (uncurry insertEscSeqs) . extractEscSeqs
-
 spec :: Spec
 spec = do
     describe "consumeSymbol" $ do
@@ -35,22 +29,24 @@ spec = do
         it "correct consuming (4)" $ do
             let s = "\ESC[31never closed" 
             fst (consumeSymbol s) `shouldBe` EscSeq "\ESC[31never closed"
-    describe "indexSymbols" $ do
-        it "correct indexing (1)" $ do
-            let s = "98765 4321"
-            let iss = toIndexedSymbolsFromString s
-            head iss `shouldBe` (9, Character '9')
-            last iss `shouldBe` (1, Character '1')
-            iss !! 5 `shouldBe` (0, Whitespace ' ')
-    describe "(extract|insert)EscSeqs" $ do
-        it "correct extract/insert (1)" $ do
-            let ss = toSymbols "ABC\ESC[31mDEF"
-            snd (extractEscSeqs ss) `shouldBe` toSymbols "ABCDEF"
-            extractInsert ss `shouldBe` ss
-        it "correct extract/insert (2)" $ do
-            let ss = toSymbols "ABC \ESC[31mDEF"
-            extractInsert ss `shouldBe` ss
-        it "correct extract/insert (2)" $ do
-            let ss = toSymbols "ABC \ESC[31m DEF"
-            -- Note that the EscSeq has shifted rightwards.
-            extractInsert ss `shouldBe` toSymbols "ABC  \ESC[31mDEF"
+    describe "zipSymbols" $ do
+        it "correct zipping (1)" $ do
+            let ssFmt = toSymbols "ABC DEFG"
+            zipSymbols ssFmt ssFmt `shouldBe` ssFmt
+        it "correct zipping (2)" $ do
+            let ssFmt = toSymbols "ABC DEFG "
+            let ssOrig = toSymbols "ABC DEFG \ESC[31m\ESC[0m"
+            zipSymbols ssFmt ssOrig `shouldBe` ssOrig
+        it "correct zipping (3)" $ do
+            let ssFmt = toSymbols "  ABC DEFG "
+            let ssOrig = toSymbols "ABC DEFG "
+            zipSymbols ssFmt ssOrig `shouldBe` ssFmt
+        it "correct zipping (4)" $ do
+            let ssFmt = toSymbols "ABC DEFG \n "
+            let ssOrig = toSymbols "ABC DEFG "
+            zipSymbols ssFmt ssOrig `shouldBe` ssFmt
+        it "correct zipping (5)" $ do
+            let ssFmt = toSymbols "ABC DEFG \n "
+            let ssOrig = toSymbols "ABC \ESC[31mDEFG "
+            let ss3 = toSymbols "ABC \ESC[31mDEFG \n "
+            zipSymbols ssFmt ssOrig `shouldBe` ss3

@@ -5,7 +5,6 @@ module LibHmt where
 import Data.Char
 import Data.List
 import Data.List.Split
-import Data.Maybe
 import System.Process
 import System.Exit
 
@@ -29,38 +28,15 @@ consumeSymbol (x:xs)
 toSymbols :: String -> [Symbol]
 toSymbols = chop consumeSymbol
 
--- Assign each Symbol an index:
--- - Whitespaces get index 0.
--- - Characters get a uniqe index.
--- - EscSeqs get the _same_ index as their next Character.
-indexSymbols :: [Symbol] -> [(Int, Symbol)]
-indexSymbols ss = snd $ foldr f (0, []) ss
-    where
-        f s@(Whitespace _) (lastIndex, iss) = (lastIndex, (0, s):iss)
-        f s@(EscSeq _) (lastIndex, iss) = (lastIndex, (lastIndex, s):iss)
-        f s (lastIndex, iss) = (lastIndex + 1, (lastIndex + 1, s):iss)
+-- Test whether the Symbol is an EsqSeq.
+isEscSeq :: Symbol -> Bool
+isEscSeq (EscSeq _) = True
+isEscSeq _ = False
 
--- Extract EscSeqs with their original index from the Symbols and return them
--- together with the list of remaining Symbols.
-extractEscSeqs :: [Symbol] -> ([(Int, Symbol)], [Symbol])
-extractEscSeqs ss = (ess, map snd noness)
-    where
-        iss = indexSymbols ss
-        (ess, noness) = partition (\(_, s) -> isEscSeq s) iss
-        isEscSeq (EscSeq _) = True
-        isEscSeq _ = False
-
--- Insert EscSeqs at their original position into the list of Symbols.
-insertEscSeqs :: [(Int, Symbol)] -> [Symbol] -> [Symbol]
-insertEscSeqs eiss ss = snd $ foldr f (reverse eiss, []) iss
-    -- use (revserse eiss) because we consume the Symbols from back to front;
-    -- i.e. we need to consume the last EscSeq first
-    where
-        iss = indexSymbols ss
-        f (_, s) ([], ss) = ([], s:ss) -- no escseqs left, simply consume rest
-        f (sIndex, s) ((eIndex, e):eiss, ss)
-            | sIndex == eIndex = (eiss, e:s:ss) -- insert escseq before current symbol
-            | otherwise        = ((eIndex, e):eiss, s:ss) -- wait
+-- Test whether the Symbol is a Whitespace.
+isWhitespace :: Symbol -> Bool
+isWhitespace (Whitespace _) = True
+isWhitespace _ = False
 
 -- Convert a Symbol back to a String.
 symbolToString :: Symbol -> String
@@ -71,15 +47,33 @@ symbolToString (EscSeq x) = x
 symbolsToString :: [Symbol] -> String
 symbolsToString = concatMap symbolToString
 
+-- Zip two Symbol lists. Identical elements are simply taken. However, the
+-- first list is expected to contain additional Whitespaces whereas the second
+-- list is expected to contain additional EsqSeqs. Those Symbols are
+-- additionally inserted into the result.
+zipSymbols :: [Symbol] -> [Symbol] -> [Symbol]
+zipSymbols ssFmt ssOrig = reverse (zipSymbols' ssFmt ssOrig [])
+zipSymbols' [] ssOrig ss = (reverse ssOrig) ++ ss
+zipSymbols' ssFmt [] ss = (reverse ssFmt) ++ ss
+zipSymbols' (f:ssFmt) (o:ssOrig) ss
+    | f == o = zipSymbols' ssFmt ssOrig (f:ss) -- no change
+    | isEscSeq o = zipSymbols' (f:ssFmt) ssOrig (o:ss) -- add missing esqseq
+    | isWhitespace f = zipSymbols' ssFmt (o:ssOrig) (f:ss) -- newly added whitespace
+    | isWhitespace o = zipSymbols' (f:ssFmt) (ssOrig) ss -- removed whitespace
+--    | otherwise = should not be possible ...
+
+
 -- Extract EscSeqs from input, run `fmt` on remainder and insert EscSeqs again.
 hmtWith :: FilePath -> [String] -> String -> IO (ExitCode, String, String)
 hmtWith exec args stdin = do
-    let (eiss, ss) = extractEscSeqs $ toSymbols stdin
-    (exitcode, stdout, stderr) <- fmtWith exec args (symbolsToString ss)
+    let ss = toSymbols stdin
+    let ssWithoutEsqSeqs = filter (not . isEscSeq) ss
+    --let (eiss, ss) = extractEscSeqs $ toSymbols stdin
+    (exitcode, stdout, stderr) <- fmtWith exec args (symbolsToString ssWithoutEsqSeqs)
     -- Insert EscSeqs only after successful `fmt`. Not sure this is the best
     -- way to do it ...
     let stdout' = if (exitcode == ExitSuccess)
-                  then symbolsToString $ insertEscSeqs eiss (toSymbols stdout)
+                  then symbolsToString $ zipSymbols (toSymbols stdout) ss
                   else stdout
     return (exitcode, stdout', stderr)
 
