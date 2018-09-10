@@ -9,9 +9,6 @@ import Data.Maybe
 import System.Process
 import System.Exit
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
-
 -- A "Symbol" represent either a single Character, a whitespace or an escape
 -- sequence.
 data Symbol = Character Char | Whitespace Char | EscSeq String deriving (Show, Eq)
