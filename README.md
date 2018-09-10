@@ -9,9 +9,9 @@
 ``hmt`` can be used exactly like ``fmt``.
 
 A word of caution:
-``fmt`` expects any non-option command line to be a file and tries to open it.
+``fmt`` expects any non-option/non-argument command line input to be a file and tries to open it.
 The same holds for ``hmt``.
-However, ``hmt`` simply forwards any non-file command line option/argument to ``fmt`` without checking whether this was actually and option/argument or not.
+However, ``hmt`` simply forwards any non-file command line input to ``fmt`` without checking whether this was actually an option/argument or not.
 
 # Prerequisites
 
